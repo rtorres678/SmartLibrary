@@ -1,6 +1,7 @@
 /****************************************
-Example Sound Level Sketch for the 
-Adafruit Microphone Amplifier
+Smart Library dB Meter sketch
+Reads microphone and sends volume measurements to webserver via HTTP POST request
+Credit Bill Earl: https://learn.adafruit.com/adafruit-microphone-amplifier-breakout/measuring-sound-levels
 ****************************************/
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WiFi.h>
@@ -22,19 +23,17 @@ void setup()
 
 void loop() 
 {
-   unsigned long startMillis= millis();  // Start of sample window
+   unsigned long startTime = millis();  // Start of sample window
    unsigned int peakToPeak = 0;   // peak-to-peak level
 
    unsigned int signalMax = 0;
    unsigned int signalMin = 1024;
-   //unsigned int samples=0;
 
    // collect data for 50 mS
-   while (millis() - startMillis < sampleWindow)
+   while (millis() - startTime < sampleWindow)
    {
       sample = analogRead(0);
-      delayMicroseconds(14);
-      //samples++;
+      delayMicroseconds(14);  //Required to avoid dropping WiFi connection
       if (sample < 1024)  // toss out spurious readings
       {
          if (sample > signalMax)
@@ -46,27 +45,27 @@ void loop()
             signalMin = sample;  // save just the min levels
          }
       }
-      //if (samples > 400)break;
    }
    peakToPeak = signalMax - signalMin;  // max - min = peak-peak amplitude
-   double volts = (peakToPeak * 5.0) / 1024;  // convert to volts
-
-   if (peakToPeak > 0)
+   
+   if (peakToPeak > 0)  //Set bottom threshold
    {
     Serial.println(String(peakToPeak));
-    if(WiFi.status()== WL_CONNECTED){
+    if(WiFi.status() == WL_CONNECTED){
       HTTPClient http;
 
+      //Prepare JSON to send in POST request
       StaticJsonDocument<40> JSONbuffer;
       JSONbuffer["Reading"] = String(peakToPeak);
       String JSONoutput = "";
       serializeJson(JSONbuffer, JSONoutput);
-      //http.begin("http://httpbin.org/post");   //Destination address:port/path
-      http.begin("http://192.168.1.109:3000/");   
+
+      //Begin HTTP connection
+      http.begin("http://192.168.1.109:3000/");   //Destination address:port/path
       http.addHeader("Content-Type", "application/json");
 
-      int httpCode = http.POST(JSONoutput);
-      String payload = http.getString();
+      int httpCode = http.POST(JSONoutput); //Should return 200 if OK
+      String payload = http.getString();  //Contains response from the server
 
       //Serial.println(httpCode);
       //Serial.println(payload);
