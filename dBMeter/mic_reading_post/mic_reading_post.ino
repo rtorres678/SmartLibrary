@@ -8,12 +8,13 @@ Credit Bill Earl: https://learn.adafruit.com/adafruit-microphone-amplifier-break
 #include <ArduinoJson.h>
 const int sampleWindow = 50; // Sample window width in mS (50 mS = 20Hz)
 unsigned int sample;
+const String macAddr = WiFi.macAddress();
 
 void setup() 
 {
    Serial.begin(115200);
    WiFi.begin("Cisco23558", "ferret42");
-
+   
    while(WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.println("Waiting for connection");
@@ -51,12 +52,14 @@ void loop()
    if (peakToPeak > 0)  //Set bottom threshold
    {
     Serial.println(String(peakToPeak));
+    //Serial.println(macAddr);
     if(WiFi.status() == WL_CONNECTED){
       HTTPClient http;
 
       //Prepare JSON to send in POST request
-      StaticJsonDocument<40> JSONbuffer;
-      JSONbuffer["Reading"] = String(peakToPeak);
+      StaticJsonDocument<100> JSONbuffer;
+      JSONbuffer["Val"] = String(peakToPeak);
+      JSONbuffer["ID"] = macAddr;
       String JSONoutput = "";
       serializeJson(JSONbuffer, JSONoutput);
 
