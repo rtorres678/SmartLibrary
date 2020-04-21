@@ -1,0 +1,2 @@
+C:\Users\Roberto\Desktop\src\SmartLibrary\WebServer\WebServer\WebServer\obj\Debug\WebServer.njsprojAssemblyReference.cache
+C:\Users\Roberto\Desktop\src\SmartLibrary\WebServer\WebServer\WebServer\bin\Microsoft.NodejsTools.WebRole.dll
